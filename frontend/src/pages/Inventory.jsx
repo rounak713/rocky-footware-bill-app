@@ -34,11 +34,20 @@ export default function Inventory() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check for manual duplicate SKUs inside the form
+    const manualSkus = form.variants.map(v => v.sku.trim()).filter(s => s !== '');
+    if (new Set(manualSkus).size !== manualSkus.length) {
+      alert("Please ensure each size has a unique SKU, or leave them blank to auto-generate.");
+      return;
+    }
+
     try {
       await API.post('/products', {
         ...form,
-        variants: form.variants.map(v => ({
+        variants: form.variants.map((v, i) => ({
           ...v,
+          sku: v.sku.trim() || `SKU-${Date.now().toString().slice(-6)}-${i+1}`,
           price: parseFloat(v.price),
           stock: parseInt(v.stock),
           barcode: v.barcode?.trim() || null,
@@ -214,8 +223,9 @@ export default function Inventory() {
                             key={field}
                             value={v[field]}
                             onChange={e => handleVariantChange(i, field, e.target.value)}
-                            placeholder={ph}
-                            required={['sku', 'price', 'stock'].includes(field)}
+                            placeholder={field === 'sku' ? 'SKU (Auto)' : ph}
+                            title={field === 'sku' ? 'Leave blank to auto-generate' : undefined}
+                            required={['price', 'stock'].includes(field)}
                             className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 transition"
                           />
                         );
