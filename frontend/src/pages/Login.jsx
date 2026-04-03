@@ -49,7 +49,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="admin@rockyfootwear.com"
+                placeholder="enter admin/staff email"
                 className="w-full bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
@@ -61,7 +61,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="••••••••"
+                  placeholder="**********"
                   className="w-full bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3.5 pr-12 outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
                 <button
