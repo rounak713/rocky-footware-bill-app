@@ -41,6 +41,7 @@ export default function Inventory() {
           ...v,
           price: parseFloat(v.price),
           stock: parseInt(v.stock),
+          barcode: v.barcode?.trim() || null,
         })),
       });
       setShowModal(false);
@@ -191,16 +192,34 @@ export default function Inventory() {
                 <div className="space-y-3">
                   {form.variants.map((v, i) => (
                     <div key={i} className="grid grid-cols-5 gap-2">
-                      {[['size', 'Size'], ['sku', 'SKU'], ['barcode', 'Barcode'], ['price', '₹ Price'], ['stock', 'Stock']].map(([field, ph]) => (
-                        <input
-                          key={field}
-                          value={v[field]}
-                          onChange={e => handleVariantChange(i, field, e.target.value)}
-                          placeholder={ph}
-                          required={['size', 'sku', 'price', 'stock'].includes(field)}
-                          className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 transition"
-                        />
-                      ))}
+                      {[['size', 'Size'], ['sku', 'SKU'], ['barcode', 'Barcode'], ['price', '₹ Price'], ['stock', 'Stock']].map(([field, ph]) => {
+                        if (field === 'size') {
+                          return (
+                            <select
+                              key={field}
+                              value={v[field]}
+                              onChange={e => handleVariantChange(i, field, e.target.value)}
+                              required
+                              className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-blue-400 transition"
+                            >
+                              <option value="" disabled>Size</option>
+                              {["UK 3", "UK 4", "UK 5", "UK 6", "UK 7", "UK 8", "UK 9", "UK 10", "UK 11", "UK 12", "Free Size"].map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          );
+                        }
+                        return (
+                          <input
+                            key={field}
+                            value={v[field]}
+                            onChange={e => handleVariantChange(i, field, e.target.value)}
+                            placeholder={ph}
+                            required={['sku', 'price', 'stock'].includes(field)}
+                            className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 transition"
+                          />
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
