@@ -13,15 +13,48 @@ export default function Inventory() {
     variants: [{ size: 'UK 6', sku: '', price: '', stock: '', barcode: '' }],
   });
 
+  const [filterCategory, setFilterCategory] = useState('');
+  const [editId, setEditId]       = useState(null);
+
   const fetchProducts = () => {
     setLoading(true);
-    API.get('/products', { params: { search } })
+    API.get('/products', { params: { search, category: filterCategory } })
       .then(r => setProducts(r.data.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchProducts(); }, [search]);
+  useEffect(() => { fetchProducts(); }, [search, filterCategory]);
+
+  const handleAddNew = () => {
+    setEditId(null);
+    setForm({
+      name: '', brand: '', category: '', description: '',
+      variants: [{ size: '', sku: '', price: '', stock: '', barcode: '' }],
+    });
+    setShowModal(true);
+  };
+
+  const handleEdit = (product, e) => {
+    e.stopPropagation();
+    setEditId(product.id);
+    setForm({
+      name: product.name, brand: product.brand || '', category: product.category || '', description: product.description || '',
+      variants: product.variants?.length ? product.variants.map(v => ({...v, sku: v.sku || ''})) : [{ size: '', sku: '', price: '', stock: '', barcode: '' }]
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (product, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to permanently delete "${product.name}" and all its recorded variants?`)) return;
+    try {
+      await API.delete(`/products/${product.id}`);
+      fetchProducts();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete product');
+    }
+  };
 
   const addVariantRow = () =>
     setForm(f => ({ ...f, variants: [...f.variants, { size: '', sku: '', price: '', stock: '', barcode: '' }] }));
@@ -43,7 +76,7 @@ export default function Inventory() {
     }
 
     try {
-      await API.post('/products', {
+      const payload = {
         ...form,
         variants: form.variants.map((v, i) => ({
           ...v,
@@ -52,11 +85,18 @@ export default function Inventory() {
           stock: parseInt(v.stock),
           barcode: v.barcode?.trim() || null,
         })),
-      });
+      };
+
+      if (editId) {
+        await API.put(`/products/${editId}`, payload);
+      } else {
+        await API.post('/products', payload);
+      }
+      
       setShowModal(false);
       fetchProducts();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to create product');
+      alert(err.response?.data?.error || 'Failed to save product');
     }
   };
 
@@ -77,22 +117,34 @@ export default function Inventory() {
           <p className="text-slate-500 mt-1">{products.length} products listed</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleAddNew}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-blue-500/20 active:scale-[0.98]"
         >
           <Plus size={20} /> Add Product
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or brand..."
-          className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
-        />
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or brand..."
+            className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
+          />
+        </div>
+        <div className="w-full md:w-56 shrink-0">
+          <select
+             value={filterCategory}
+             onChange={e => setFilterCategory(e.target.value)}
+             className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm font-semibold text-slate-700 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2220%22%20height=%2220%22%20viewBox=%220%200%2020%2020%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M5%207.5L10%2012.5L15%207.5%22%20stroke=%22%2394A3B8%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center]"
+          >
+             <option value="">All Categories</option>
+             {Object.keys(categoryColors).map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Product List */}
@@ -129,7 +181,22 @@ export default function Inventory() {
                       {product.category}
                     </span>
                   )}
-                  {expanded === product.id ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+                  <div className="border-l border-slate-200 h-6 mx-1"></div>
+                  <button
+                    onClick={e => handleEdit(product, e)}
+                    className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    title="Edit Product"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                  <button
+                    onClick={e => handleDelete(product, e)}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                    title="Delete Product"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                  {expanded === product.id ? <ChevronUp size={20} className="text-slate-400 ml-1" /> : <ChevronDown size={20} className="text-slate-400 ml-1" />}
                 </div>
               </button>
 
@@ -175,7 +242,7 @@ export default function Inventory() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white rounded-t-3xl z-10">
-              <h2 className="text-xl font-black text-slate-800">Add New Product</h2>
+              <h2 className="text-xl font-black text-slate-800">{editId ? 'Edit Product' : 'Add New Product'}</h2>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
@@ -240,7 +307,7 @@ export default function Inventory() {
                   Cancel
                 </button>
                 <button type="submit" className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-lg shadow-blue-500/20">
-                  Save Product
+                  {editId ? 'Save Changes' : 'Create Product'}
                 </button>
               </div>
             </form>

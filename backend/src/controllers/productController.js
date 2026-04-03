@@ -58,13 +58,43 @@ const createProduct = async (req, res, next) => {
 // PUT /api/products/:id
 const updateProduct = async (req, res, next) => {
   try {
-    const { name, brand, category, description } = req.body;
-    const product = await prisma.product.update({
-      where: { id: parseInt(req.params.id) },
-      data: { name, brand, category, description },
+    const productId = parseInt(req.params.id);
+    const { name, brand, category, description, imageUrl, variants } = req.body;
+
+    const product = await prisma.$transaction(async (tx) => {
+      await tx.product.update({
+        where: { id: productId },
+        data: { name, brand, category, description, imageUrl },
+      });
+
+      if (variants) {
+        const incomingIds = variants.filter(v => v.id).map(v => v.id);
+        await tx.variant.deleteMany({
+          where: { productId, id: { notIn: incomingIds } }
+        });
+
+        for (const v of variants) {
+          if (v.id) {
+            await tx.variant.update({
+              where: { id: v.id },
+              data: { size: v.size, sku: v.sku, barcode: v.barcode, price: v.price, stock: v.stock }
+            });
+          } else {
+            await tx.variant.create({
+              data: { size: v.size, sku: v.sku, barcode: v.barcode, price: v.price, stock: v.stock, productId }
+            });
+          }
+        }
+      }
+
+      return tx.product.findUnique({ where: { id: productId }, include: { variants: true }});
     });
+
     res.json({ success: true, data: product });
   } catch (err) {
+    if (err.code === 'P2003') {
+      return res.status(400).json({ success: false, error: 'Cannot delete a size/variant that has already been billed. Please set its stock to 0 instead.' });
+    }
     next(err);
   }
 };
