@@ -5,6 +5,7 @@ import API from '../services/api';
 export default function Reports() {
   const [pnl, setPnl]         = useState(null);
   const [topProducts, setTopProducts] = useState([]);
+  const [categoryStats, setCategoryStats] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [month, setMonth]     = useState(new Date().toISOString().slice(0, 7));
   const [expForm, setExpForm] = useState({ category: '', amount: '', note: '', date: '' });
@@ -13,6 +14,7 @@ export default function Reports() {
   const fetchAll = () => {
     API.get('/reports/pnl', { params: { month } }).then(r => setPnl(r.data.data)).catch(() => {});
     API.get('/reports/top-products', { params: { month } }).then(r => setTopProducts(r.data.data)).catch(() => {});
+    API.get('/reports/category-stats', { params: { month } }).then(r => setCategoryStats(r.data.data)).catch(() => {});
     API.get('/reports/expenses').then(r => setExpenses(r.data.data)).catch(() => {});
   };
 
@@ -69,7 +71,7 @@ export default function Reports() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Item Sales Report */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[800px]">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -92,6 +94,35 @@ export default function Reports() {
                   <div className="text-right">
                     <p className="font-black text-slate-800">{item.totalQty} sold</p>
                     <p className="text-xs text-slate-400">{fmt(item.totalRevenue)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Category Sales Report */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[800px]">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="flex items-center gap-2">
+              <BarChart3 size={18} className="text-violet-600" />
+              <h2 className="font-bold text-slate-700">Sales by Category</h2>
+            </div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{month}</span>
+          </div>
+          {categoryStats.length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-10">No category data for {month}</p>
+          ) : (
+            <div className="divide-y divide-slate-50 overflow-y-auto flex-1">
+              {categoryStats.map((cat, i) => (
+                <div key={i} className="flex items-center px-6 py-4 gap-4 hover:bg-slate-50 transition">
+                  <span className="text-sm font-black text-slate-300 w-6">{i + 1}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-800 text-sm">{cat.category}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-slate-800">{cat.qty} sold</p>
+                    <p className="text-xs text-slate-400">{fmt(cat.revenue)}</p>
                   </div>
                 </div>
               ))}

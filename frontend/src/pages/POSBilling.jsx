@@ -43,6 +43,7 @@ export default function POSBilling() {
 
   // Inventory search
   const [invSearch, setInvSearch] = useState('');
+  const [invCategory, setInvCategory] = useState('');
   const [invResults, setInvResults] = useState([]);
   const invSearchRef = useRef(null);
 
@@ -63,9 +64,9 @@ export default function POSBilling() {
 
   // 2. Inventory Dropdown Search
   useEffect(() => {
-    if (!invSearch.trim()) { setInvResults([]); return; }
+    if (!invSearch.trim() && !invCategory) { setInvResults([]); return; }
     const t = setTimeout(() => {
-      API.get('/products', { params: { search: invSearch } })
+      API.get('/products', { params: { search: invSearch, category: invCategory } })
         .then(r => {
           // Extract & flatten all variants from matching products
           const products = r.data.data || [];
@@ -82,7 +83,7 @@ export default function POSBilling() {
         .catch(() => setInvResults([]));
     }, 250);
     return () => clearTimeout(t);
-  }, [invSearch]);
+  }, [invSearch, invCategory]);
 
   // Auto-close dropdowns on click outside (optional polish)
   useEffect(() => {
@@ -172,6 +173,10 @@ export default function POSBilling() {
     }));
   };
 
+  const updatePrice = (id, newPrice) => {
+    setCart(prev => prev.map(i => i.id === id ? { ...i, price: newPrice } : i));
+  };
+
   const subtotal = cart.reduce((acc, i) => acc + parseFloat(i.price) * i.qty, 0);
   const discountPercent = parseFloat(discount) || 0;
   const discountAmt = subtotal * (discountPercent / 100);
@@ -239,16 +244,26 @@ export default function POSBilling() {
           <h1 className="text-3xl font-black text-slate-800 tracking-tight">New Invoice</h1>
 
           {/* Quick Inventory Search */}
-          <div className="relative z-20" ref={invSearchRef}>
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search size={20} className="text-slate-400" />
+          <div className="relative z-20 flex gap-3" ref={invSearchRef}>
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search size={20} className="text-slate-400" />
+              </div>
+              <input
+                value={invSearch}
+                onChange={e => setInvSearch(e.target.value)}
+                placeholder="Search Inventory by Product Name, Brand, or SKU... (or use barcode scanner here)"
+                className="w-full h-[54px] bg-white pl-12 pr-4 py-4 rounded-2xl border-2 border-transparent shadow-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition font-medium text-slate-700"
+              />
             </div>
-            <input
-              value={invSearch}
-              onChange={e => setInvSearch(e.target.value)}
-              placeholder="Search Inventory by Product Name, Brand, or SKU... (or use barcode scanner here)"
-              className="w-full bg-white pl-12 pr-4 py-4 rounded-2xl border-2 border-transparent shadow-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition font-medium text-slate-700"
-            />
+            <select
+               value={invCategory}
+               onChange={e => setInvCategory(e.target.value)}
+               className="w-48 h-[54px] bg-white px-4 border-2 border-transparent rounded-2xl outline-none focus:border-blue-500 transition shadow-sm font-semibold text-slate-600 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2216%22%20height=%2216%22%20viewBox=%220%200%2020%2020%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M5%207.5L10%2012.5L15%207.5%22%20stroke=%22%2394A3B8%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center]"
+            >
+               <option value="">All Categories</option>
+               {['Sneakers', 'Sandals', 'Formal', 'Sports', 'Kids'].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
             {invResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden max-h-80 overflow-y-auto">
                 <div className="px-4 py-2 bg-slate-50 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
@@ -334,9 +349,18 @@ export default function POSBilling() {
                       <span className="w-8 text-center font-bold text-slate-800">{item.qty}</span>
                       <button onClick={() => updateQty(item.id, item.qty + 1)} className="w-8 h-8 rounded-lg hover:bg-white hover:shadow-sm font-bold text-slate-600 flex items-center justify-center transition">+</button>
                     </div>
-                    <div className="text-right w-28">
-                      <p className="text-xs text-slate-400">{fmt(item.price)} each</p>
-                      <p className="font-black text-slate-800 text-lg leading-tight">{fmt(parseFloat(item.price) * item.qty)}</p>
+                    <div className="text-right w-32 flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-0.5">
+                        <span className="text-xs text-slate-400 font-bold">₹</span>
+                        <input 
+                          type="number"
+                          value={item.price}
+                          onChange={e => updatePrice(item.id, e.target.value)}
+                          className="w-20 text-xs text-right bg-slate-50 border border-transparent hover:border-slate-300 focus:border-blue-400 focus:bg-white rounded outline-none transition py-1 px-1.5 font-bold text-slate-600"
+                          title="Edit Unit Price"
+                        />
+                      </div>
+                      <p className="font-black text-slate-800 text-lg leading-tight mt-1">{fmt(parseFloat(item.price || 0) * item.qty)}</p>
                     </div>
                     <button onClick={() => removeFromCart(item.id)} className="text-slate-300 hover:text-red-500 transition ml-2 p-2 hover:bg-red-50 rounded-lg">
                       <Trash2 size={20} />

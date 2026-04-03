@@ -200,4 +200,54 @@ const getExpenses = async (req, res, next) => {
   }
 };
 
-module.exports = { getSalesReport, getPnL, getTopProducts, getDashboardSummary, createExpense, getExpenses };
+// GET /api/reports/category-stats?month=2024-06
+const getCategoryStats = async (req, res, next) => {
+  try {
+    const { month } = req.query;
+    let from, to;
+    if (month) {
+      from = new Date(`${month}-01`);
+      to = new Date(from.getFullYear(), from.getMonth() + 1, 0, 23, 59, 59);
+    }
+    
+    // We only want items from invoices that are NOT cancelled
+    const invoicesInMonth = await prisma.invoice.findMany({
+      where: {
+        status: { not: 'CANCELLED' },
+        ...(from && to && { createdAt: { gte: from, lte: to } })
+      },
+      select: { id: true }
+    });
+    
+    const invoiceIds = invoicesInMonth.map(i => i.id);
+
+    if (invoiceIds.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const items = await prisma.invoiceItem.findMany({
+      where: { invoiceId: { in: invoiceIds } },
+      include: {
+        variant: {
+          include: { product: true }
+        }
+      }
+    });
+
+    const categoryMap = {};
+    for (const item of items) {
+      const category = item.variant?.product?.category || 'Manual Entry';
+      if (!categoryMap[category]) categoryMap[category] = { category, revenue: 0, qty: 0 };
+      categoryMap[category].revenue += parseFloat(item.total || 0);
+      categoryMap[category].qty += item.qty;
+    }
+
+    const data = Object.values(categoryMap).sort((a, b) => b.revenue - a.revenue);
+
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getSalesReport, getPnL, getTopProducts, getDashboardSummary, createExpense, getExpenses, getCategoryStats };
