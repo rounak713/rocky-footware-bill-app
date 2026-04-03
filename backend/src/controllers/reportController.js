@@ -236,7 +236,7 @@ const getCategoryStats = async (req, res, next) => {
 
     const categoryMap = {};
     for (const item of items) {
-      const category = item.variant?.product?.category || 'Manual Entry';
+      const category = item.variant?.product?.category || item.customCategory || 'Manual Entry';
       if (!categoryMap[category]) categoryMap[category] = { category, revenue: 0, qty: 0 };
       categoryMap[category].revenue += parseFloat(item.total || 0);
       categoryMap[category].qty += item.qty;

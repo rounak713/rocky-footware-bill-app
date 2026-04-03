@@ -39,7 +39,7 @@ export default function POSBilling() {
   }, [cart, customer, payMode, discount]);
   
   // Custom manual item form
-  const [itemForm, setItemForm] = useState({ name: '', price: '', qty: 1 });
+  const [itemForm, setItemForm] = useState({ name: '', price: '', qty: 1, category: '' });
 
   // Inventory search
   const [invSearch, setInvSearch] = useState('');
@@ -115,18 +115,19 @@ export default function POSBilling() {
 
   const addManualItem = (e) => {
     e.preventDefault();
-    if (!itemForm.name || !itemForm.price) return;
+    if (!itemForm.name || !itemForm.price || !itemForm.category) return;
     
     const newItem = {
       id: 'manual-' + Date.now(),
       variantId: null,
       customName: itemForm.name,
+      customCategory: itemForm.category,
       price: itemForm.price,
       qty: parseInt(itemForm.qty) || 1,
     };
     
     setCart([newItem, ...cart]);
-    setItemForm({ name: '', price: '', qty: 1 });
+    setItemForm({ name: '', price: '', qty: 1, category: '' });
   };
 
   const addInventoryItem = (variant) => {
@@ -298,20 +299,27 @@ export default function POSBilling() {
           </div>
 
           {/* Manual Item Form */}
-          <form onSubmit={addManualItem} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-end gap-3 hover:border-slate-300 transition">
-            <div className="flex-1">
+          <form onSubmit={addManualItem} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-end gap-3 hover:border-slate-300 transition">
+            <div className="flex-1 min-w-[200px]">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <PlusSquare size={14} /> Add Custom / Un-tracked Item
+                <PlusSquare size={14} /> Add Custom Item
               </label>
-              <input required value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} placeholder="e.g. Shoe Polish, Carry Bag" className="w-full px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition" />
+              <input required value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} placeholder="e.g. Polish, Carry Bag" className="w-full px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition" />
             </div>
-            <div className="w-32">
+            <div className="w-36">
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5 flex items-center gap-1"><Package size={12}/> Category</label>
+              <select required value={itemForm.category} onChange={e => setItemForm({...itemForm, category: e.target.value})} className="w-full px-2 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition appearance-none text-sm font-semibold text-slate-700 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2216%22%20height=%2216%22%20viewBox=%220%200%2016%2016%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M4%206L8%2010L12%206%22%20stroke=%22%2394A3B8%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_0.5rem_center]">
+                <option value="" disabled>Select</option>
+                {['Sneakers', 'Sandals', 'Formal', 'Sports', 'Kids', 'Casuals', 'Loafers', 'Boots', 'Heels', 'Flats'].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="w-28">
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Price (₹)</label>
               <input required type="number" min="0" value={itemForm.price} onChange={e => setItemForm({...itemForm, price: e.target.value})} placeholder="0.00" className="w-full px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition" />
             </div>
-            <div className="w-24">
+            <div className="w-20">
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Qty</label>
-              <input required type="number" min="1" value={itemForm.qty} onChange={e => setItemForm({...itemForm, qty: e.target.value})} className="w-full px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition" />
+              <input required type="number" min="1" value={itemForm.qty} onChange={e => setItemForm({...itemForm, qty: e.target.value})} className="w-full px-4 py-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition text-center" />
             </div>
             <button type="submit" className="px-6 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl h-[50px] transition">
               Add

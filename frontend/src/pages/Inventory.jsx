@@ -9,27 +9,28 @@ export default function Inventory() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading]     = useState(true);
   const [form, setForm] = useState({
-    name: '', brand: '', category: '', description: '',
+    name: '', brand: '', category: '', gender: '', description: '',
     variants: [{ size: 'UK 6', sku: '', price: '', stock: '', barcode: '' }],
   });
 
   const [filterCategory, setFilterCategory] = useState('');
+  const [filterGender, setFilterGender] = useState('');
   const [editId, setEditId]       = useState(null);
 
   const fetchProducts = () => {
     setLoading(true);
-    API.get('/products', { params: { search, category: filterCategory } })
+    API.get('/products', { params: { search, category: filterCategory, gender: filterGender } })
       .then(r => setProducts(r.data.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchProducts(); }, [search, filterCategory]);
+  useEffect(() => { fetchProducts(); }, [search, filterCategory, filterGender]);
 
   const handleAddNew = () => {
     setEditId(null);
     setForm({
-      name: '', brand: '', category: '', description: '',
+      name: '', brand: '', category: '', gender: '', description: '',
       variants: [{ size: '', sku: '', price: '', stock: '', barcode: '' }],
     });
     setShowModal(true);
@@ -39,7 +40,7 @@ export default function Inventory() {
     e.stopPropagation();
     setEditId(product.id);
     setForm({
-      name: product.name, brand: product.brand || '', category: product.category || '', description: product.description || '',
+      name: product.name, brand: product.brand || '', category: product.category || '', gender: product.gender || '', description: product.description || '',
       variants: product.variants?.length ? product.variants.map(v => ({...v, sku: v.sku || ''})) : [{ size: '', sku: '', price: '', stock: '', barcode: '' }]
     });
     setShowModal(true);
@@ -106,6 +107,11 @@ export default function Inventory() {
     Formal: 'bg-violet-100 text-violet-700',
     Sports: 'bg-emerald-100 text-emerald-700',
     Kids: 'bg-pink-100 text-pink-700',
+    Casuals: 'bg-orange-100 text-orange-700',
+    Loafers: 'bg-teal-100 text-teal-700',
+    Boots: 'bg-stone-100 text-stone-700',
+    Heels: 'bg-rose-100 text-rose-700',
+    Flats: 'bg-cyan-100 text-cyan-700',
   };
 
   return (
@@ -135,7 +141,7 @@ export default function Inventory() {
             className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
           />
         </div>
-        <div className="w-full md:w-56 shrink-0">
+        <div className="w-full md:w-48 shrink-0">
           <select
              value={filterCategory}
              onChange={e => setFilterCategory(e.target.value)}
@@ -143,6 +149,16 @@ export default function Inventory() {
           >
              <option value="">All Categories</option>
              {Object.keys(categoryColors).map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="w-full md:w-40 shrink-0">
+          <select
+             value={filterGender}
+             onChange={e => setFilterGender(e.target.value)}
+             className="w-full px-4 py-3.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm font-semibold text-slate-700 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2220%22%20height=%2220%22%20viewBox=%220%200%2020%2020%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M5%207.5L10%2012.5L15%207.5%22%20stroke=%22%2394A3B8%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center]"
+          >
+             <option value="">All Genders</option>
+             {['Men', 'Women', 'Kids', 'Unisex'].map(g => <option key={g} value={g}>{g}</option>)}
           </select>
         </div>
       </div>
@@ -176,6 +192,11 @@ export default function Inventory() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  {product.gender && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase tracking-widest border border-slate-200">
+                      {product.gender}
+                    </span>
+                  )}
                   {product.category && (
                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${categoryColors[product.category] || 'bg-slate-100 text-slate-600'}`}>
                       {product.category}
@@ -247,7 +268,7 @@ export default function Inventory() {
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                {[['name', 'Product Name *'], ['brand', 'Brand'], ['category', 'Category'], ['description', 'Description']].map(([field, label]) => (
+                {[['name', 'Product Name *'], ['brand', 'Brand'], ['category', 'Category'], ['gender', 'Gender'], ['description', 'Description']].map(([field, label]) => (
                   <div key={field} className={field === 'description' ? 'col-span-2' : ''}>
                     <label className="block text-sm font-semibold text-slate-600 mb-1.5">{label}</label>
                     {field === 'category' ? (
@@ -258,6 +279,15 @@ export default function Inventory() {
                       >
                         <option value="" disabled>Select Category</option>
                         {Object.keys(categoryColors).map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    ) : field === 'gender' ? (
+                      <select
+                        value={form[field]}
+                        onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-white appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2216%22%20height=%2216%22%20viewBox=%220%200%2020%2020%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M5%207.5L10%2012.5L15%207.5%22%20stroke=%22%2394A3B8%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center]"
+                      >
+                        <option value="" disabled>Select Gender</option>
+                        {['Men', 'Women', 'Kids', 'Unisex'].map(g => <option key={g} value={g}>{g}</option>)}
                       </select>
                     ) : (
                       <input

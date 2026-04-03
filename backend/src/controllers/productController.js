@@ -3,11 +3,12 @@ const prisma = require('../config/db');
 // GET /api/products
 const getProducts = async (req, res, next) => {
   try {
-    const { search, category } = req.query;
+    const { search, category, gender } = req.query;
     const products = await prisma.product.findMany({
       where: {
         ...(search && { name: { contains: search, mode: 'insensitive' } }),
         ...(category && { category }),
+        ...(gender && { gender }),
       },
       include: {
         variants: {
@@ -39,10 +40,10 @@ const getProduct = async (req, res, next) => {
 // POST /api/products
 const createProduct = async (req, res, next) => {
   try {
-    const { name, brand, category, description, imageUrl, variants } = req.body;
+    const { name, brand, category, gender, description, imageUrl, variants } = req.body;
     const product = await prisma.product.create({
       data: {
-        name, brand, category, description, imageUrl,
+        name, brand, category, gender, description, imageUrl,
         variants: {
           create: variants || [],
         },
@@ -59,12 +60,12 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     const productId = parseInt(req.params.id);
-    const { name, brand, category, description, imageUrl, variants } = req.body;
+    const { name, brand, category, gender, description, imageUrl, variants } = req.body;
 
     const product = await prisma.$transaction(async (tx) => {
       await tx.product.update({
         where: { id: productId },
-        data: { name, brand, category, description, imageUrl },
+        data: { name, brand, category, gender, description, imageUrl },
       });
 
       if (variants) {

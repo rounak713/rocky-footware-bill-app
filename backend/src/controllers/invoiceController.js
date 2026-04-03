@@ -65,6 +65,7 @@ const createInvoice = async (req, res, next) => {
             create: invoiceItems.map(i => ({
               variantId: i.variantId || null,
               customName: i.customName || null,
+              customCategory: i.customCategory || null,
               qty: i.qty,
               unitPrice: i.unitPrice,
               taxRate: i.taxRate,
