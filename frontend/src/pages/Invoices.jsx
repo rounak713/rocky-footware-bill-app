@@ -13,15 +13,15 @@ const STATUS_OPTIONS = [
 ];
 
 export default function Invoices() {
-  const [invoices, setInvoices]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatus] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [invoiceDetails, setInvoiceDetails]   = useState(null);
-  const [detailsLoading, setDetailsLoading]   = useState(false);
+  const [invoiceDetails, setInvoiceDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function Invoices() {
       filename: `${invoiceDetails.invoiceNo}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: 'mm', format: 'Japan You 6 Envelope', orientation: 'portrait' },
     }).from(element).save();
   };
 
@@ -142,63 +142,62 @@ export default function Invoices() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left min-w-[700px]">
-                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase text-xs tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4">Invoice No</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Customer</th>
-                    <th className="px-6 py-4">Total</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {invoices.map((inv) => (
-                    <tr key={inv.id} className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 font-bold text-slate-800">{inv.invoiceNo}</td>
-                      <td className="px-6 py-4 text-slate-500">
-                        {new Date(inv.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric',
-                        })}
-                        {' '}
-                        <span className="text-xs text-slate-400">
-                          {new Date(inv.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-slate-700">
-                        {inv.customer ? inv.customer.name : <span className="text-slate-400 italic">Walk-in</span>}
-                      </td>
-                      <td className="px-6 py-4 font-black text-slate-800">{fmt(inv.total)}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                          inv.status === 'PAID'      ? 'bg-emerald-100 text-emerald-700' :
-                          inv.status === 'UNPAID'    ? 'bg-amber-100 text-amber-700' :
-                          inv.status === 'PARTIAL'   ? 'bg-blue-100 text-blue-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {inv.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openInvoice(inv)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg transition text-xs"
-                          >
-                            <Eye size={14} /> View
-                          </button>
-                          <button
-                            onClick={(e) => handleDelete(inv, e)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 font-semibold rounded-lg transition text-xs"
-                          >
-                            <Trash2 size={14} /> Delete
-                          </button>
-                        </div>
-                      </td>
+                  <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase text-xs tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4">Invoice No</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Customer</th>
+                      <th className="px-6 py-4">Total</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {invoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50 transition">
+                        <td className="px-6 py-4 font-bold text-slate-800">{inv.invoiceNo}</td>
+                        <td className="px-6 py-4 text-slate-500">
+                          {new Date(inv.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                          })}
+                          {' '}
+                          <span className="text-xs text-slate-400">
+                            {new Date(inv.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-700">
+                          {inv.customer ? inv.customer.name : <span className="text-slate-400 italic">Walk-in</span>}
+                        </td>
+                        <td className="px-6 py-4 font-black text-slate-800">{fmt(inv.total)}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                              inv.status === 'UNPAID' ? 'bg-amber-100 text-amber-700' :
+                                inv.status === 'PARTIAL' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
+                            {inv.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openInvoice(inv)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold rounded-lg transition text-xs"
+                            >
+                              <Eye size={14} /> View
+                            </button>
+                            <button
+                              onClick={(e) => handleDelete(inv, e)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 font-semibold rounded-lg transition text-xs"
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
