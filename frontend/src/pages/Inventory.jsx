@@ -250,12 +250,23 @@ export default function Inventory() {
                 {[['name', 'Product Name *'], ['brand', 'Brand'], ['category', 'Category'], ['description', 'Description']].map(([field, label]) => (
                   <div key={field} className={field === 'description' ? 'col-span-2' : ''}>
                     <label className="block text-sm font-semibold text-slate-600 mb-1.5">{label}</label>
-                    <input
-                      required={field === 'name'}
-                      value={form[field]}
-                      onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition"
-                    />
+                    {field === 'category' ? (
+                      <select
+                        value={form[field]}
+                        onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition bg-white appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width=%2216%22%20height=%2216%22%20viewBox=%220%200%2020%2020%22%20fill=%22none%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M5%207.5L10%2012.5L15%207.5%22%20stroke=%22%2394A3B8%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center]"
+                      >
+                        <option value="" disabled>Select Category</option>
+                        {Object.keys(categoryColors).map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        required={field === 'name'}
+                        value={form[field]}
+                        onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
