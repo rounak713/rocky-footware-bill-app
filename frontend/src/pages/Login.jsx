@@ -49,7 +49,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="admin@rocky.com"
+                placeholder="admin@rockyfootwear.com"
                 className="w-full bg-white/10 border border-white/10 text-white placeholder:text-slate-500 rounded-xl px-4 py-3.5 outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
