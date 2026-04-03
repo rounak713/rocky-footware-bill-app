@@ -173,7 +173,8 @@ export default function POSBilling() {
   };
 
   const subtotal = cart.reduce((acc, i) => acc + parseFloat(i.price) * i.qty, 0);
-  const discountAmt = parseFloat(discount) || 0;
+  const discountPercent = parseFloat(discount) || 0;
+  const discountAmt = subtotal * (discountPercent / 100);
   const total = subtotal - discountAmt;
 
   const handleCheckout = async () => {
@@ -425,7 +426,7 @@ export default function POSBilling() {
 
             {/* Discount */}
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Flat Discount (₹)</label>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">Discount (%)</label>
               <input
                 type="number"
                 value={discount}
